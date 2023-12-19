@@ -1,4 +1,5 @@
 import uuid
+from typing import List
 
 import pytest
 
@@ -13,7 +14,7 @@ class TestPayment:
     store_id: str
     buyer_id: str
     password: str
-    buy_book_info_list: [Book]
+    buy_book_info_list: List[Book]
     total_price: int
     order_id: str
     buyer: Buyer

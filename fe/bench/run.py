@@ -7,7 +7,7 @@ def run_bench():
     wl.gen_database()
 
     sessions = []
-    for i in range(0, wl.session):
+    for _ in range(0, wl.session):
         ss = Session(wl)
         sessions.append(ss)
 

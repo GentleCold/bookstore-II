@@ -1,6 +1,7 @@
 import logging
 import sqlite3 as sqlite
 import time
+from typing import Tuple
 
 import jwt
 
@@ -29,8 +30,8 @@ def jwt_encode(user_id: str, terminal: str) -> str:
 #       "terminal": [terminal code],
 #       "timestamp": [ts]} to a JWT
 #   }
-def jwt_decode(encoded_token, user_id: str) -> str:
-    decoded = jwt.decode(encoded_token, key=user_id, algorithms="HS256")
+def jwt_decode(encoded_token, user_id: str):
+    decoded = jwt.decode(encoded_token, key=user_id, algorithms=["HS256"])
     return decoded
 
 
@@ -50,6 +51,7 @@ class User(db_conn.DBConn):
                 now = time.time()
                 if self.token_lifetime > now - ts >= 0:
                     return True
+            return False
         except jwt.exceptions.InvalidSignatureError as e:
             logging.error(str(e))
             return False
@@ -68,7 +70,7 @@ class User(db_conn.DBConn):
             return error.error_exist_user_id(user_id)
         return 200, "ok"
 
-    def check_token(self, user_id: str, token: str) -> (int, str):
+    def check_token(self, user_id: str, token: str) -> Tuple[int, str]:
         cursor = self.conn.execute("SELECT token from user where user_id=?", (user_id,))
         row = cursor.fetchone()
         if row is None:
@@ -78,7 +80,7 @@ class User(db_conn.DBConn):
             return error.error_authorization_fail()
         return 200, "ok"
 
-    def check_password(self, user_id: str, password: str) -> (int, str):
+    def check_password(self, user_id: str, password: str) -> Tuple[int, str]:
         cursor = self.conn.execute(
             "SELECT password from user where user_id=?", (user_id,)
         )
@@ -91,7 +93,7 @@ class User(db_conn.DBConn):
 
         return 200, "ok"
 
-    def login(self, user_id: str, password: str, terminal: str) -> (int, str, str):
+    def login(self, user_id: str, password: str, terminal: str) -> Tuple[int, str, str]:
         token = ""
         try:
             code, message = self.check_password(user_id, password)
@@ -112,7 +114,7 @@ class User(db_conn.DBConn):
             return 530, "{}".format(str(e)), ""
         return 200, "ok", token
 
-    def logout(self, user_id: str, token: str) -> bool:
+    def logout(self, user_id: str, token: str) -> Tuple[int, str]:
         try:
             code, message = self.check_token(user_id, token)
             if code != 200:
@@ -135,7 +137,7 @@ class User(db_conn.DBConn):
             return 530, "{}".format(str(e))
         return 200, "ok"
 
-    def unregister(self, user_id: str, password: str) -> (int, str):
+    def unregister(self, user_id: str, password: str) -> Tuple[int, str]:
         try:
             code, message = self.check_password(user_id, password)
             if code != 200:
@@ -154,7 +156,7 @@ class User(db_conn.DBConn):
 
     def change_password(
         self, user_id: str, old_password: str, new_password: str
-    ) -> bool:
+    ) -> Tuple[int, str]:
         try:
             code, message = self.check_password(user_id, old_password)
             if code != 200:

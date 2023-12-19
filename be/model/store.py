@@ -2,6 +2,7 @@ import logging
 import os
 import sqlite3 as sqlite
 import threading
+from typing import Optional
 
 
 class Store:
@@ -12,8 +13,9 @@ class Store:
         self.init_tables()
 
     def init_tables(self):
+        conn = self.get_db_conn()
         try:
-            conn = self.get_db_conn()
+            # conn = self.get_db_conn()
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS user ("
                 "user_id TEXT PRIMARY KEY, password TEXT NOT NULL, "
@@ -51,7 +53,7 @@ class Store:
         return sqlite.connect(self.database)
 
 
-database_instance: Store = None
+database_instance: Optional[Store] = None
 # global variable for database sync
 init_completed_event = threading.Event()
 
@@ -63,4 +65,5 @@ def init_database(db_path):
 
 def get_db_conn():
     global database_instance
-    return database_instance.get_db_conn()
+    if database_instance is not None:
+        return database_instance.get_db_conn()

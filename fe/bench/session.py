@@ -1,7 +1,7 @@
 import threading
 import time
 
-from fe.bench.workload import NewOrder, Payment, Workload
+from fe.bench.workload import Payment, Workload
 
 
 class Session(threading.Thread):
@@ -20,7 +20,7 @@ class Session(threading.Thread):
         self.gen_procedure()
 
     def gen_procedure(self):
-        for i in range(0, self.workload.procedure_per_session):
+        for _ in range(0, self.workload.procedure_per_session):
             new_order = self.workload.get_new_order()
             self.new_order_request.append(new_order)
 

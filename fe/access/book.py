@@ -2,8 +2,9 @@ import base64
 import os
 import random
 import sqlite3 as sqlite
+from typing import List
 
-import simplejson as json
+# import simplejson as json
 
 
 class Book:
@@ -22,8 +23,8 @@ class Book:
     author_intro: str
     book_intro: str
     content: str
-    tags: [str]
-    pictures: [bytes]
+    tags: List[str]
+    pictures: List[str]
 
     def __init__(self):
         self.tags = []
@@ -46,7 +47,7 @@ class BookDB:
         row = cursor.fetchone()
         return row[0]
 
-    def get_book_info(self, start, size) -> [Book]:
+    def get_book_info(self, start, size) -> List[Book]:
         books = []
         conn = sqlite.connect(self.book_db)
         cursor = conn.execute(
@@ -84,7 +85,7 @@ class BookDB:
             for tag in tags.split("\n"):
                 if tag.strip() != "":
                     book.tags.append(tag)
-            for i in range(0, random.randint(0, 9)):
+            for _ in range(0, random.randint(0, 9)):
                 if picture is not None:
                     encode_str = base64.b64encode(picture).decode("utf-8")
                     book.pictures.append(encode_str)

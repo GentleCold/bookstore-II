@@ -2,6 +2,7 @@ import logging
 import random
 import threading
 import uuid
+from typing import Tuple
 
 from fe import conf
 from fe.access import book
@@ -16,7 +17,7 @@ class NewOrder:
         self.store_id = store_id
         self.book_id_and_count = book_id_and_count
 
-    def run(self) -> (bool, str):
+    def run(self) -> Tuple[bool, str]:
         code, order_id = self.buyer.new_order(self.store_id, self.book_id_and_count)
         return code == 200, order_id
 
@@ -65,12 +66,12 @@ class Workload:
         self.n_new_order_ok_past = 0
         self.n_payment_ok_past = 0
 
-    def to_seller_id_and_password(self, no: int) -> (str, str):
+    def to_seller_id_and_password(self, no: int) -> Tuple[str, str]:
         return "seller_{}_{}".format(no, self.uuid), "password_seller_{}_{}".format(
             no, self.uuid
         )
 
-    def to_buyer_id_and_password(self, no: int) -> (str, str):
+    def to_buyer_id_and_password(self, no: int) -> Tuple[str, str]:
         return "buyer_{}_{}".format(no, self.uuid), "buyer_seller_{}_{}".format(
             no, self.uuid
         )

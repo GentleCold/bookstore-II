@@ -2,6 +2,7 @@ import json
 import logging
 import sqlite3 as sqlite
 import uuid
+from typing import List, Tuple
 
 from be.model import db_conn, error
 
@@ -11,8 +12,8 @@ class Buyer(db_conn.DBConn):
         db_conn.DBConn.__init__(self)
 
     def new_order(
-        self, user_id: str, store_id: str, id_and_count: [(str, int)]
-    ) -> (int, str, str):
+        self, user_id: str, store_id: str, id_and_count: List[Tuple[str, int]]
+    ) -> Tuple[int, str, str]:
         order_id = ""
         try:
             if not self.user_id_exist(user_id):
@@ -69,7 +70,7 @@ class Buyer(db_conn.DBConn):
 
         return 200, "ok", order_id
 
-    def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
+    def payment(self, user_id: str, password: str, order_id: str) -> Tuple[int, str]:
         conn = self.conn
         try:
             cursor = conn.execute(
@@ -161,7 +162,7 @@ class Buyer(db_conn.DBConn):
 
         return 200, "ok"
 
-    def add_funds(self, user_id, password, add_value) -> (int, str):
+    def add_funds(self, user_id, password, add_value) -> Tuple[int, str]:
         try:
             cursor = self.conn.execute(
                 "SELECT password  from user where user_id=?", (user_id,)

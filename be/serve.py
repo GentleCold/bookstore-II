@@ -1,7 +1,9 @@
 import logging
 import os
 
-from flask import Blueprint, Flask, request
+from flask import Flask
+from flask.blueprints import Blueprint
+from flask.globals import request
 
 from be.model.store import init_completed_event, init_database
 from be.view import auth, buyer, seller

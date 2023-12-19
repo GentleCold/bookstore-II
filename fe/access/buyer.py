@@ -1,9 +1,11 @@
+from typing import List, Tuple
 from urllib.parse import urljoin
 
 import requests
-import simplejson
 
 from fe.access.auth import Auth
+
+# import simplejson
 
 
 class Buyer:
@@ -17,7 +19,9 @@ class Buyer:
         code, self.token = self.auth.login(self.user_id, self.password, self.terminal)
         assert code == 200
 
-    def new_order(self, store_id: str, book_id_and_count: [(str, int)]) -> (int, str):
+    def new_order(
+        self, store_id: str, book_id_and_count: List[Tuple[str, int]]
+    ) -> Tuple[int, str]:
         books = []
         for id_count_pair in book_id_and_count:
             books.append({"id": id_count_pair[0], "count": id_count_pair[1]})
@@ -40,7 +44,7 @@ class Buyer:
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
 
-    def add_funds(self, add_value: str) -> int:
+    def add_funds(self, add_value: int) -> int:
         json = {
             "user_id": self.user_id,
             "password": self.password,

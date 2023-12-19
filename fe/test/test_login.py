@@ -31,9 +31,9 @@ class TestLogin:
         assert code == 200
 
     def test_error_user_id(self):
-        code, token = self.auth.login(self.user_id + "_x", self.password, self.terminal)
+        code, _ = self.auth.login(self.user_id + "_x", self.password, self.terminal)
         assert code == 401
 
     def test_error_password(self):
-        code, token = self.auth.login(self.user_id, self.password + "_x", self.terminal)
+        code, _ = self.auth.login(self.user_id, self.password + "_x", self.terminal)
         assert code == 401

@@ -42,9 +42,7 @@ class TestPassword:
         )
         assert code != 200
 
-        code, new_token = self.auth.login(
-            self.user_id, self.new_password, self.terminal
-        )
+        code, _ = self.auth.login(self.user_id, self.new_password, self.terminal)
         assert code != 200
 
     def test_error_user_id(self):
@@ -53,7 +51,5 @@ class TestPassword:
         )
         assert code != 200
 
-        code, new_token = self.auth.login(
-            self.user_id, self.new_password, self.terminal
-        )
+        code, _ = self.auth.login(self.user_id, self.new_password, self.terminal)
         assert code != 200

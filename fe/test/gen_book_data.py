@@ -1,4 +1,5 @@
 import random
+from typing import List, Tuple
 
 from fe import conf
 from fe.access import book
@@ -21,7 +22,7 @@ class GenBook:
 
     def gen(
         self, non_exist_book_id: bool, low_stock_level, max_book_count: int = 100
-    ) -> (bool, []):
+    ) -> Tuple[bool, List]:
         self.__init_book_list__()
         ok = True
         book_db = book.BookDB(conf.Use_Large_DB)

@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask.blueprints import Blueprint
+from flask.globals import request
+from flask.json import jsonify
 
 from be.model import user
 

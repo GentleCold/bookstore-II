@@ -1,4 +1,8 @@
-from flask import Blueprint, jsonify, request
+from typing import List
+
+from flask.blueprints import Blueprint
+from flask.globals import request
+from flask.json import jsonify
 
 from be.model.buyer import Buyer
 
@@ -9,7 +13,7 @@ bp_buyer = Blueprint("buyer", __name__, url_prefix="/buyer")
 def new_order():
     user_id: str = request.json.get("user_id")
     store_id: str = request.json.get("store_id")
-    books: [] = request.json.get("books")
+    books: List = request.json.get("books")
     id_and_count = []
     for book in books:
         book_id = book.get("id")
