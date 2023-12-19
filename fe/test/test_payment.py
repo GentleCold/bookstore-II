@@ -1,10 +1,11 @@
+import uuid
+
 import pytest
 
-from fe.access.buyer import Buyer
-from fe.test.gen_book_data import GenBook
-from fe.access.new_buyer import register_new_buyer
 from fe.access.book import Book
-import uuid
+from fe.access.buyer import Buyer
+from fe.access.new_buyer import register_new_buyer
+from fe.test.gen_book_data import GenBook
 
 
 class TestPayment:

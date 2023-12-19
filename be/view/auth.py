@@ -1,6 +1,5 @@
-from flask import Blueprint
-from flask import request
-from flask import jsonify
+from flask import Blueprint, jsonify, request
+
 from be.model import user
 
 bp_auth = Blueprint("auth", __name__, url_prefix="/auth")

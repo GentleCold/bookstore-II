@@ -1,6 +1,8 @@
+from urllib.parse import urljoin
+
 import requests
 import simplejson
-from urllib.parse import urljoin
+
 from fe.access.auth import Auth
 
 

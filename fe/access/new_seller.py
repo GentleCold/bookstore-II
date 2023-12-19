@@ -1,5 +1,5 @@
 from fe import conf
-from fe.access import seller, auth
+from fe.access import auth, seller
 
 
 def register_new_seller(user_id, password) -> seller.Seller:

@@ -1,5 +1,5 @@
 from fe import conf
-from fe.access import buyer, auth
+from fe.access import auth, buyer
 
 
 def register_new_buyer(user_id, password) -> buyer.Buyer:

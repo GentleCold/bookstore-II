@@ -1,9 +1,10 @@
-import jwt
-import time
 import logging
 import sqlite3 as sqlite
-from be.model import error
-from be.model import db_conn
+import time
+
+import jwt
+
+from be.model import db_conn, error
 
 # encode a json string like:
 #   {
@@ -19,7 +20,7 @@ def jwt_encode(user_id: str, terminal: str) -> str:
         key=user_id,
         algorithm="HS256",
     )
-    return encoded.decode("utf-8")
+    return encoded.encode("utf-8").decode("utf-8")
 
 
 # decode a JWT to a json string like:

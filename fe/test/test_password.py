@@ -2,8 +2,8 @@ import uuid
 
 import pytest
 
-from fe.access import auth
 from fe import conf
+from fe.access import auth
 
 
 class TestPassword:

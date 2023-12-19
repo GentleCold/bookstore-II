@@ -1,6 +1,7 @@
 import sqlite3 as sqlite
-from be.model import error
-from be.model import db_conn
+from typing import List, Tuple
+
+from be.model import db_conn, error
 
 
 class Seller(db_conn.DBConn):

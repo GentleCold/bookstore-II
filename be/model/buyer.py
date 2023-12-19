@@ -1,9 +1,9 @@
-import sqlite3 as sqlite
-import uuid
 import json
 import logging
-from be.model import db_conn
-from be.model import error
+import sqlite3 as sqlite
+import uuid
+
+from be.model import db_conn, error
 
 
 class Buyer(db_conn.DBConn):

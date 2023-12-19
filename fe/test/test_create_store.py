@@ -1,7 +1,8 @@
+import uuid
+
 import pytest
 
 from fe.access.new_seller import register_new_seller
-import uuid
 
 
 class TestCreateStore:

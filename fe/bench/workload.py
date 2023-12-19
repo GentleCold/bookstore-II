@@ -1,12 +1,13 @@
 import logging
-import uuid
 import random
 import threading
-from fe.access import book
-from fe.access.new_seller import register_new_seller
-from fe.access.new_buyer import register_new_buyer
-from fe.access.buyer import Buyer
+import uuid
+
 from fe import conf
+from fe.access import book
+from fe.access.buyer import Buyer
+from fe.access.new_buyer import register_new_buyer
+from fe.access.new_seller import register_new_seller
 
 
 class NewOrder:
