@@ -1,0 +1,8 @@
+/fe/data/book_lx.db
+/.idea
+/htmlcov
+/.coverage
+**/__pycache__
+/be.db
+*.log
+*.db
