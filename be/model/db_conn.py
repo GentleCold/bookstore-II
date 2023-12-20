@@ -1,4 +1,5 @@
 from be.model import store
+from be.model.tables import StoreBookTable, StoreTable, UserTable
 
 
 class DBConn:
@@ -6,32 +7,26 @@ class DBConn:
         self.conn = store.get_db_conn()
 
     def user_id_exist(self, user_id):
-        cursor = self.conn.execute(
-            "SELECT user_id FROM user WHERE user_id = ?;", (user_id,)
-        )
-        row = cursor.fetchone()
-        if row is None:
+        result = self.conn.query(UserTable).filter_by(user_id=user_id).first()
+        if result is None:
             return False
         else:
             return True
 
     def book_id_exist(self, store_id, book_id):
-        cursor = self.conn.execute(
-            "SELECT book_id FROM store WHERE store_id = ? AND book_id = ?;",
-            (store_id, book_id),
+        result = (
+            self.conn.query(StoreBookTable)
+            .filter_by(store_id=store_id, book_id=book_id)
+            .first()
         )
-        row = cursor.fetchone()
-        if row is None:
+        if result is None:
             return False
         else:
             return True
 
     def store_id_exist(self, store_id):
-        cursor = self.conn.execute(
-            "SELECT store_id FROM user_store WHERE store_id = ?;", (store_id,)
-        )
-        row = cursor.fetchone()
-        if row is None:
+        result = self.conn.query(StoreTable).filter_by(store_id=store_id).first()
+        if result is None:
             return False
         else:
             return True
