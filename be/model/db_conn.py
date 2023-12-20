@@ -5,6 +5,7 @@ from be.model.tables import StoreBookTable, StoreTable, UserTable
 class DBConn:
     def __init__(self):
         self.conn = store.get_db_conn()
+        self.mongo = store.get_mongo_conn()
 
     def user_id_exist(self, user_id):
         result = self.conn.query(UserTable).filter_by(user_id=user_id).first()

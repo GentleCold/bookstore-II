@@ -38,6 +38,7 @@ class StoreBookTable(Base):
 
     store_id = Column(String, primary_key=True)
     book_id = Column(String, primary_key=True)
+    price = Column(Integer)
     stock_level = Column(Integer)
 
 

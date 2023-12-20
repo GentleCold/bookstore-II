@@ -130,6 +130,6 @@ graph LR
 | order_id | string | 订单id   | N          |
 | book_id  | string | 书本id   | N          |
 | count    | int    | 购买数量 | N          |
-| price    | int    | 书本总价 | N          |
+| price    | int    | 书本单价 | N          |
 
 使用progresql存储数据，用ORM方法操作数据表

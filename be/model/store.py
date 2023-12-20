@@ -23,7 +23,7 @@ class Store:
         # mongodb
         self.pymongo = self.get_mongo_conn()["be"]
         self.pymongo["book"].drop()
-        self.pymongo["book"].create_index(["book_id"], unique=True)
+        self.pymongo["book"].create_index(["book_id"])
 
     @staticmethod
     def get_db_conn():

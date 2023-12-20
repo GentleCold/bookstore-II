@@ -1,10 +1,17 @@
-import json
 import logging
-import sqlite3 as sqlite
 import uuid
 from typing import List, Tuple
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from be.model import db_conn, error
+from be.model.tables import (
+    OrderDetailTable,
+    OrderTable,
+    StoreBookTable,
+    StoreTable,
+    UserTable,
+)
 
 
 class Buyer(db_conn.DBConn):
@@ -23,45 +30,45 @@ class Buyer(db_conn.DBConn):
             uid = "{}_{}_{}".format(user_id, store_id, str(uuid.uuid1()))
 
             for book_id, count in id_and_count:
-                cursor = self.conn.execute(
-                    "SELECT book_id, stock_level, book_info FROM store "
-                    "WHERE store_id = ? AND book_id = ?;",
-                    (store_id, book_id),
+                result = (
+                    self.conn.query(
+                        StoreBookTable.price,
+                        StoreBookTable.stock_level,
+                    )
+                    .filter_by(store_id=store_id, book_id=book_id)
+                    .first()
                 )
-                row = cursor.fetchone()
-                if row is None:
+                if result is None:
                     return error.error_non_exist_book_id(book_id) + (order_id,)
 
-                stock_level = row[1]
-                book_info = row[2]
-                book_info_json = json.loads(book_info)
-                price = book_info_json.get("price")
+                price = result[0]
+                stock_level = result[1]
 
                 if stock_level < count:
                     return error.error_stock_level_low(book_id) + (order_id,)
 
-                cursor = self.conn.execute(
-                    "UPDATE store set stock_level = stock_level - ? "
-                    "WHERE store_id = ? and book_id = ? and stock_level >= ?; ",
-                    (count, store_id, book_id, count),
+                result = self.conn.query(StoreBookTable).filter(
+                    StoreBookTable.store_id == store_id,
+                    StoreBookTable.book_id == book_id,
+                    StoreBookTable.stock_level >= count,
                 )
-                if cursor.rowcount == 0:
+                if result is None:
                     return error.error_stock_level_low(book_id) + (order_id,)
+                result.update({"stock_level": StoreBookTable.stock_level - count})
 
-                self.conn.execute(
-                    "INSERT INTO new_order_detail(order_id, book_id, count, price) "
-                    "VALUES(?, ?, ?, ?);",
-                    (uid, book_id, count, price),
+                order_detail = OrderDetailTable(
+                    order_id=uid,
+                    book_id=book_id,
+                    count=count,
+                    price=price,
                 )
+                self.conn.add(order_detail)
 
-            self.conn.execute(
-                "INSERT INTO new_order(order_id, store_id, user_id) "
-                "VALUES(?, ?, ?);",
-                (uid, store_id, user_id),
-            )
+            order = OrderTable(order_id=uid, user_id=user_id, store_id=store_id)
+            self.conn.add(order)
             self.conn.commit()
             order_id = uid
-        except sqlite.Error as e:
+        except SQLAlchemyError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
@@ -73,90 +80,93 @@ class Buyer(db_conn.DBConn):
     def payment(self, user_id: str, password: str, order_id: str) -> Tuple[int, str]:
         conn = self.conn
         try:
-            cursor = conn.execute(
-                "SELECT order_id, user_id, store_id FROM new_order WHERE order_id = ?",
-                (order_id,),
+            order = (
+                conn.query(OrderTable.order_id, OrderTable.user_id, OrderTable.store_id)
+                .filter_by(order_id=order_id)
+                .first()
             )
-            row = cursor.fetchone()
-            if row is None:
+            if order is None:
                 return error.error_invalid_order_id(order_id)
 
-            order_id = row[0]
-            buyer_id = row[1]
-            store_id = row[2]
+            order_id = order[0]
+            buyer_id = order[1]
+            store_id = order[2]
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute(
-                "SELECT balance, password FROM user WHERE user_id = ?;", (buyer_id,)
+            # find buyer
+            buyer = (
+                conn.query(UserTable.balance, UserTable.password)
+                .filter_by(user_id=buyer_id)
+                .first()
             )
-            row = cursor.fetchone()
-            if row is None:
+            if buyer is None:
                 return error.error_non_exist_user_id(buyer_id)
-            balance = row[0]
-            if password != row[1]:
+            balance = buyer[0]
+            if password != buyer[1]:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute(
-                "SELECT store_id, user_id FROM user_store WHERE store_id = ?;",
-                (store_id,),
-            )
-            row = cursor.fetchone()
-            if row is None:
+            # find seller
+            seller = conn.query(StoreTable.user_id).filter_by(store_id=store_id).first()
+            if seller is None:
                 return error.error_non_exist_store_id(store_id)
 
-            seller_id = row[1]
+            seller_id = seller[0]
 
             if not self.user_id_exist(seller_id):
                 return error.error_non_exist_user_id(seller_id)
 
-            cursor = conn.execute(
-                "SELECT book_id, count, price FROM new_order_detail WHERE order_id = ?;",
-                (order_id,),
+            # calculate total price
+            infos = (
+                conn.query(
+                    OrderDetailTable.count,
+                    OrderDetailTable.price,
+                )
+                .filter_by(order_id=order_id)
+                .all()
             )
             total_price = 0
-            for row in cursor:
-                count = row[1]
-                price = row[2]
+            for info in infos:
+                count = info[0]
+                price = info[1]
                 total_price = total_price + price * count
 
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute(
-                "UPDATE user set balance = balance - ?"
-                "WHERE user_id = ? AND balance >= ?",
-                (total_price, buyer_id, total_price),
+            # update buyer balance
+            buyer_update = conn.query(UserTable).filter(
+                UserTable.user_id == buyer_id, UserTable.balance >= total_price
             )
-            if cursor.rowcount == 0:
+            if buyer_update is None:
                 return error.error_not_sufficient_funds(order_id)
+            buyer_update.update({"balance": UserTable.balance - total_price})
 
-            cursor = conn.execute(
-                "UPDATE user set balance = balance + ?" "WHERE user_id = ?",
-                (total_price, seller_id),
-            )
+            # update seller balance
+            seller_update = conn.query(UserTable).filter_by(user_id=seller_id)
 
-            if cursor.rowcount == 0:
+            if seller_update == 0:
                 return error.error_non_exist_user_id(seller_id)
+            seller_update.update({"balance": UserTable.balance + total_price})
 
-            cursor = conn.execute(
-                "DELETE FROM new_order WHERE order_id = ?", (order_id,)
-            )
-            if cursor.rowcount == 0:
-                return error.error_invalid_order_id(order_id)
-
-            cursor = conn.execute(
-                "DELETE FROM new_order_detail where order_id = ?", (order_id,)
-            )
-            if cursor.rowcount == 0:
-                return error.error_invalid_order_id(order_id)
+            # delete order
+            # cursor = conn.execute(
+            #     "DELETE FROM new_order WHERE order_id = ?", (order_id,)
+            # )
+            # if cursor.rowcount == 0:
+            #     return error.error_invalid_order_id(order_id)
+            #
+            # cursor = conn.execute(
+            #     "DELETE FROM new_order_detail where order_id = ?", (order_id,)
+            # )
+            # if cursor.rowcount == 0:
+            #     return error.error_invalid_order_id(order_id)
 
             conn.commit()
 
-        except sqlite.Error as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
-
         except BaseException as e:
             return 530, "{}".format(str(e))
 
@@ -164,25 +174,23 @@ class Buyer(db_conn.DBConn):
 
     def add_funds(self, user_id, password, add_value) -> Tuple[int, str]:
         try:
-            cursor = self.conn.execute(
-                "SELECT password  from user where user_id=?", (user_id,)
+            # find user
+            user = (
+                self.conn.query(UserTable.password).filter_by(user_id=user_id).first()
             )
-            row = cursor.fetchone()
-            if row is None:
+            if user is None:
                 return error.error_authorization_fail()
 
-            if row[0] != password:
+            if user[0] != password:
                 return error.error_authorization_fail()
 
-            cursor = self.conn.execute(
-                "UPDATE user SET balance = balance + ? WHERE user_id = ?",
-                (add_value, user_id),
+            # update balance
+            self.conn.query(UserTable).filter_by(user_id=user_id).update(
+                {"balance": UserTable.balance + add_value}
             )
-            if cursor.rowcount == 0:
-                return error.error_non_exist_user_id(user_id)
 
             self.conn.commit()
-        except sqlite.Error as e:
+        except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
             return 530, "{}".format(str(e))
