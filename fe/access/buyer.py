@@ -65,3 +65,20 @@ class Buyer:
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
+
+    def look_up_order(self) -> Tuple[int, list]:
+        json = {"user_id": self.user_id}
+
+        url = urljoin(self.url_prefix, "look_up_order")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        response_json = r.json()
+        return r.status_code, response_json.get("results")
+
+    def cancel_order(self, order_id: str) -> int:
+        json = {"user_id": self.user_id, "order_id": order_id}
+
+        url = urljoin(self.url_prefix, "cancel_order")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code

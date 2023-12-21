@@ -52,3 +52,20 @@ def pick():
     b = Buyer()
     code, message = b.pick(user_id, order_id)
     return jsonify({"message": message}), code
+
+
+@bp_buyer.route("/look_up_order", methods=["POST"])
+def look_up_order():
+    user_id = request.json.get("user_id")
+    b = Buyer()
+    code, message, results = b.look_up_order(user_id)
+    return jsonify({"message": message, "results": results}), code
+
+
+@bp_buyer.route("/cancel_order", methods=["POST"])
+def cancel_order():
+    user_id = request.json.get("user_id")
+    order_id = request.json.get("order_id")
+    b = Buyer()
+    code, message = b.cancel_order(user_id, order_id)
+    return jsonify({"message": message}), code

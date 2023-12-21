@@ -1,10 +1,12 @@
+import uuid
+from typing import List
+
 import pytest
 
-from fe.access.buyer import Buyer
-from fe.test.gen_book_data import GenBook
-from fe.access.new_buyer import register_new_buyer
 from fe.access.book import Book
-import uuid
+from fe.access.buyer import Buyer
+from fe.access.new_buyer import register_new_buyer
+from fe.test.gen_book_data import GenBook
 
 
 class TestLookUpOrder:
@@ -12,7 +14,7 @@ class TestLookUpOrder:
     store_id: str
     buyer_id: str
     password: str
-    buy_book_info_list: [Book]
+    buy_book_info_list: List[Book]
     total_price: int
     order_id: str
     buyer: Buyer
@@ -45,6 +47,6 @@ class TestLookUpOrder:
         assert len(_) == 10
 
     def test_non_exist_user_id(self):
-        self.buyer.user_id += '_x'
+        self.buyer.user_id += "_x"
         code, _ = self.buyer.look_up_order()
         assert code == 511
