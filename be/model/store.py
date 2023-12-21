@@ -29,7 +29,11 @@ class Store:
     def get_db_conn():
         conn = None
         try:
-            conn = create_engine("postgresql://gentle:123qwe@localhost:5432/bookstore")
+            conn = create_engine(
+                "postgresql://gentle:123qwe@localhost:5432/bookstore",
+                pool_size=100,
+                pool_recycle=5,
+            )
         except SQLAlchemyError as e:
             print(e)
             logging.log(logging.ERROR, "Postgresql connection error")
