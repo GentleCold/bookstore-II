@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class UserTable(Base):
-    __tablename__ = "user"
+    __tablename__ = "user_table"
 
     user_id = Column(String, primary_key=True)
     password = Column(String)
@@ -17,14 +17,14 @@ class UserTable(Base):
 
 
 class StoreTable(Base):
-    __tablename__ = "store"
+    __tablename__ = "store_table"
 
     store_id = Column(String, primary_key=True)
     user_id = Column(String)
 
 
 class OrderTable(Base):
-    __tablename__ = "order"
+    __tablename__ = "order_table"
 
     order_id = Column(String, primary_key=True)
     user_id = Column(String)
@@ -34,7 +34,7 @@ class OrderTable(Base):
 
 
 class StoreBookTable(Base):
-    __tablename__ = "store_book"
+    __tablename__ = "store_book_table"
 
     store_id = Column(String, primary_key=True)
     book_id = Column(String, primary_key=True)
@@ -43,7 +43,7 @@ class StoreBookTable(Base):
 
 
 class OrderDetailTable(Base):
-    __tablename__ = "order_detail"
+    __tablename__ = "order_detail_table"
 
     order_id = Column(String, primary_key=True)
     book_id = Column(String, primary_key=True)

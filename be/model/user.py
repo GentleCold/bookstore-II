@@ -68,9 +68,11 @@ class User(db_conn.DBConn):
                 token=token,
                 terminal=terminal,
             )
+            print(user_id)
             self.conn.add(new_user)
             self.conn.commit()
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
+            print(e)
             return error.error_exist_user_id(user_id)
         return 200, "ok"
 

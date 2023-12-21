@@ -1,5 +1,6 @@
 import logging
 import uuid
+from time import time
 from typing import List, Tuple
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -64,7 +65,10 @@ class Buyer(db_conn.DBConn):
                 )
                 self.conn.add(order_detail)
 
-            order = OrderTable(order_id=uid, user_id=user_id, store_id=store_id)
+            now = time()
+            order = OrderTable(
+                order_id=uid, user_id=user_id, store_id=store_id, state=0, time=now
+            )
             self.conn.add(order)
             self.conn.commit()
             order_id = uid
@@ -81,7 +85,12 @@ class Buyer(db_conn.DBConn):
         conn = self.conn
         try:
             order = (
-                conn.query(OrderTable.order_id, OrderTable.user_id, OrderTable.store_id)
+                conn.query(
+                    OrderTable.order_id,
+                    OrderTable.user_id,
+                    OrderTable.store_id,
+                    OrderTable.state,
+                )
                 .filter_by(order_id=order_id)
                 .first()
             )
@@ -91,6 +100,11 @@ class Buyer(db_conn.DBConn):
             order_id = order[0]
             buyer_id = order[1]
             store_id = order[2]
+            state = order[3]
+
+            # 非期待订单状态
+            if state != 0:
+                return error.error_unexpected_order_status(order_id, "paid")
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
@@ -107,7 +121,7 @@ class Buyer(db_conn.DBConn):
             if password != buyer[1]:
                 return error.error_authorization_fail()
 
-            # find seller
+            # find seller, seller should exist
             seller = conn.query(StoreTable.user_id).filter_by(store_id=store_id).first()
             if seller is None:
                 return error.error_non_exist_store_id(store_id)
@@ -135,7 +149,7 @@ class Buyer(db_conn.DBConn):
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            # update buyer balance
+            # update buyer balance, exclude seller, unless buyer pick the books
             buyer_update = conn.query(UserTable).filter(
                 UserTable.user_id == buyer_id, UserTable.balance >= total_price
             )
@@ -143,25 +157,10 @@ class Buyer(db_conn.DBConn):
                 return error.error_not_sufficient_funds(order_id)
             buyer_update.update({"balance": UserTable.balance - total_price})
 
-            # update seller balance
-            seller_update = conn.query(UserTable).filter_by(user_id=seller_id)
-
-            if seller_update == 0:
-                return error.error_non_exist_user_id(seller_id)
-            seller_update.update({"balance": UserTable.balance + total_price})
-
-            # delete order
-            # cursor = conn.execute(
-            #     "DELETE FROM new_order WHERE order_id = ?", (order_id,)
-            # )
-            # if cursor.rowcount == 0:
-            #     return error.error_invalid_order_id(order_id)
-            #
-            # cursor = conn.execute(
-            #     "DELETE FROM new_order_detail where order_id = ?", (order_id,)
-            # )
-            # if cursor.rowcount == 0:
-            #     return error.error_invalid_order_id(order_id)
+            # update state of order
+            self.conn.query(OrderTable).filter_by(order_id=order_id).update(
+                {"state": 1}
+            )
 
             conn.commit()
 
@@ -188,6 +187,79 @@ class Buyer(db_conn.DBConn):
             self.conn.query(UserTable).filter_by(user_id=user_id).update(
                 {"balance": UserTable.balance + add_value}
             )
+
+            self.conn.commit()
+        except SQLAlchemyError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok"
+
+    def pick(self, user_id: str, order_id: str) -> Tuple[int, str]:
+        try:
+            if not self.user_id_exist(user_id):
+                return error.error_non_exist_user_id(user_id)
+
+            order = (
+                self.conn.query(
+                    OrderTable.user_id, OrderTable.store_id, OrderTable.state
+                )
+                .filter_by(order_id=order_id)
+                .first()
+            )
+
+            # 不存在订单
+            if order is None:
+                return error.error_invalid_order_id(order_id)
+
+            store_id = order[1]
+            state = order[2]
+
+            # 不匹配买家
+            if user_id != order[0]:
+                return error.error_not_corresponding_buyer(user_id, order_id)
+
+            # 预期订单为发货状态
+            if state != 2:
+                return error.error_unexpected_order_status(order_id, "ship")
+
+            # 收货，更新状态
+            self.conn.query(OrderTable).filter_by(order_id=order_id).update(
+                {"state": 3}
+            )
+
+            # 收货后将钱转入卖家
+            seller_id = (
+                self.conn.query(StoreTable.user_id)
+                .filter_by(store_id=store_id)
+                .first()[0]
+            )
+            if not self.user_id_exist(seller_id):
+                return error.error_non_exist_user_id(seller_id)
+
+            # 获得订单详细信息
+            # calculate total price
+            infos = (
+                self.conn.query(
+                    OrderDetailTable.count,
+                    OrderDetailTable.price,
+                )
+                .filter_by(order_id=order_id)
+                .all()
+            )
+            total_price = 0
+            for info in infos:
+                count = info[0]
+                price = info[1]
+                total_price = total_price + price * count
+
+            # update seller balance
+            seller_update = self.conn.query(UserTable).filter_by(user_id=seller_id)
+
+            if seller_update == 0:
+                return error.error_non_exist_user_id(seller_id)
+            seller_update.update({"balance": UserTable.balance + total_price})
 
             self.conn.commit()
         except SQLAlchemyError as e:

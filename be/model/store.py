@@ -18,7 +18,7 @@ class Store:
         # drop out all tables befor initialize
         Base.metadata.drop_all(self.engine)
         Base.metadata.create_all(self.engine)
-        self.database = sessionmaker(bind=self.engine)()
+        self.database = sessionmaker(bind=self.engine)
 
         # mongodb
         self.pymongo = self.get_mongo_conn()["be"]
