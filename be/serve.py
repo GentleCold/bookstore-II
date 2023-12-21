@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Flask
+from flask.app import Flask
 from flask.blueprints import Blueprint
 from flask.globals import request
 
@@ -30,7 +30,7 @@ def be_run():
     log_file = os.path.join(parent_path, "app.log")
     init_database()
 
-    logging.basicConfig(filename=log_file, level=logging.INFO)
+    logging.basicConfig(filename=log_file, level=logging.ERROR)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
         "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"

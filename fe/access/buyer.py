@@ -54,3 +54,14 @@ class Buyer:
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
+
+    def pick(self, order_id: str) -> int:
+        json = {
+            "user_id": self.user_id,
+            "order_id": order_id,
+        }
+
+        url = urljoin(self.url_prefix, "pick")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code

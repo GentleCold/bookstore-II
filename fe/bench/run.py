@@ -1,3 +1,5 @@
+# import logging
+
 from fe.bench.session import Session
 from fe.bench.workload import Workload
 
@@ -19,4 +21,5 @@ def run_bench():
 
 
 # if __name__ == "__main__":
-#    run_bench()
+#     logging.basicConfig(filename="./bench.log", level=logging.INFO)
+#     run_bench()

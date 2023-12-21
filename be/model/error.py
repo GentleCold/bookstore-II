@@ -9,16 +9,44 @@ error_code = {
     517: "stock level low, book id {}",
     518: "invalid order id {}",
     519: "not sufficient funds, order id {}",
-    520: "",
-    521: "",
-    522: "",
-    523: "",
-    524: "",
-    525: "",
-    526: "",
-    527: "",
+    # more errors
+    520: "not corresponding seller, seller id {}, order id {}",
+    521: "not corresponding buyer, buyer id {}, order id {}",
+    522: "not corresponding store, store id {}, order id {}",
+    523: "unexpected order status, order id {}, expected status {}",
+    524: "the order timeout, order id {}",
+    525: "invalid key name {}",
+    526: "non exist search result.",
     528: "",
 }
+
+
+def error_non_exist_search_result():
+    return 526, error_code[526]
+
+
+def error_invalid_key_name(key_name):
+    return 525, error_code[525].format(key_name)
+
+
+def error_order_timeout(order_id):
+    return 524, error_code[524].format(order_id)
+
+
+def error_unexpected_order_status(order_id, status):
+    return 523, error_code[523].format(order_id, status)
+
+
+def error_not_corresponding_store(store_id, order_id):
+    return 522, error_code[522].format(store_id, order_id)
+
+
+def error_not_corresponding_buyer(user_id, order_id):
+    return 521, error_code[521].format(user_id, order_id)
+
+
+def error_not_corresponding_seller(user_id, order_id):
+    return 520, error_code[520].format(user_id, order_id)
 
 
 def error_non_exist_user_id(user_id):

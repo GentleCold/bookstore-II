@@ -1,5 +1,3 @@
-import json
-
 from flask.blueprints import Blueprint
 from flask.globals import request
 from flask.json import jsonify
@@ -40,5 +38,17 @@ def add_stock_level():
 
     s = seller.Seller()
     code, message = s.add_stock_level(user_id, store_id, book_id, add_num)
+
+    return jsonify({"message": message}), code
+
+
+@bp_seller.route("/ship", methods=["POST"])
+def ship():
+    order_id: str = request.json.get("order_id")
+    store_id: str = request.json.get("store_id")
+    user_id: str = request.json.get("user_id")
+
+    s = seller.Seller()
+    code, message = s.ship(order_id, store_id, user_id)
 
     return jsonify({"message": message}), code
