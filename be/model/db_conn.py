@@ -4,7 +4,7 @@ from be.model.tables import StoreBookTable, StoreTable, UserTable
 
 class DBConn:
     def __init__(self):
-        self.conn = store.get_db_conn()
+        self.conn = store.get_db_conn()()
         self.mongo = store.get_mongo_conn()
 
     def user_id_exist(self, user_id):
