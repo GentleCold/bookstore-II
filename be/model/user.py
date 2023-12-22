@@ -57,12 +57,13 @@ class User(db_conn.DBConn):
             logging.error(str(e))
             return False
 
-    def register(self, user_id: str, password: str):
+    def register(self, user_id: str, password: str, username: str = "user"):
         try:
             terminal = "terminal_{}".format(str(time.time()))
             token = jwt_encode(user_id, terminal)
             new_user = UserTable(
                 user_id=user_id,
+                user_name=username,
                 password=password,
                 balance=0,
                 token=token,
@@ -166,6 +167,25 @@ class User(db_conn.DBConn):
                 {"password": new_password, "token": token, "terminal": terminal}
             )
 
+            self.conn.commit()
+        except SQLAlchemyError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+        return 200, "ok"
+
+    def change_user_name(
+        self, user_id: str, token: str, user_name: str
+    ) -> Tuple[int, str]:
+        try:
+            code, message = self.check_token(user_id, token)
+            if code != 200:
+                return code, message
+
+            user = self.conn.query(UserTable).filter_by(user_id=user_id)
+            if user is None:
+                return error.error_authorization_fail()
+            user.update({"user_name": user_name})
             self.conn.commit()
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))

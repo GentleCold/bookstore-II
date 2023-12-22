@@ -56,3 +56,15 @@ def change_password():
         user_id=user_id, old_password=old_password, new_password=new_password
     )
     return jsonify({"message": message}), code
+
+
+@bp_auth.route("/change_user_name", methods=["POST"])
+def change_user_name():
+    user_id: str = request.json.get("user_id")
+    token: str = request.headers.get("token")
+    user_name: str = request.json.get("user_name")
+    u = user.User()
+    code, message = u.change_user_name(
+        user_id=user_id, token=token, user_name=user_name
+    )
+    return jsonify({"message": message}), code

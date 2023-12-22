@@ -13,6 +13,7 @@ class UserTable(Base):
     __tablename__ = "user_table"
 
     user_id = Column(String, primary_key=True)
+    user_name = Column(String)
     password = Column(String)
     balance = Column(Integer)
     token = Column(String, nullable=True)

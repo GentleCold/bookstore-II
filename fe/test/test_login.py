@@ -37,3 +37,10 @@ class TestLogin:
     def test_error_password(self):
         code, _ = self.auth.login(self.user_id, self.password + "_x", self.terminal)
         assert code == 401
+
+    def test_change_user_name(self):
+        code, token = self.auth.login(self.user_id, self.password, self.terminal)
+        assert code == 200
+
+        code = self.auth.change_user_name(self.user_id, token, "new_user_name")
+        assert code == 200

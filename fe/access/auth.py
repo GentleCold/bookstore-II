@@ -42,3 +42,10 @@ class Auth:
         url = urljoin(self.url_prefix, "unregister")
         r = requests.post(url, json=json)
         return r.status_code
+
+    def change_user_name(self, user_id: str, token: str, user_name: str) -> int:
+        json = {"user_id": user_id, "user_name": user_name}
+        headers = {"token": token}
+        url = urljoin(self.url_prefix, "change_user_name")
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
