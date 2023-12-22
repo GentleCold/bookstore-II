@@ -1,9 +1,12 @@
-from sqlalchemy import Column, Float, Integer, String
+from sqlalchemy import Column, Float, Integer, String, Text, text
 from sqlalchemy.orm import declarative_base
+from sqlalchemy_searchable import make_searchable
+from sqlalchemy_utils.types import TSVectorType
 
 # from sqlalchemy.orm import relationship
 
 Base = declarative_base()
+make_searchable(Base.metadata)
 
 
 class UserTable(Base):
@@ -49,3 +52,38 @@ class OrderDetailTable(Base):
     book_id = Column(String, primary_key=True)
     count = Column(Integer)
     price = Column(Integer)
+
+
+allowed_fields = [
+    "id",
+    "tags",
+    "title",
+    "author",
+    "publisher",
+    "original_title",
+    "translator",
+    "pub_year",
+    "author_intro",
+    "book_intro",
+]
+
+
+class BookTable(Base):
+    __tablename__ = "book_table"
+    store_id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True)
+    title = Column(String)
+    author = Column(String)
+    publisher = Column(String)
+    original_title = Column(String)
+    translator = Column(String)
+    pub_year = Column(String)
+    pages = Column(Integer)
+    binding = Column(String)
+    isbn = Column(String)
+    author_intro = Column(Text)
+    book_intro = Column(Text)
+    tags = Column(String)
+    currency_unit = Column(String)
+
+    search_vector = Column(TSVectorType(*allowed_fields))

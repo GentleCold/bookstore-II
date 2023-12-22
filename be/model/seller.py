@@ -1,11 +1,10 @@
 from typing import Tuple
 
-from flask.app import json
 from pymongo.errors import OperationFailure
 from sqlalchemy.exc import SQLAlchemyError
 
 from be.model import db_conn, error
-from be.model.tables import OrderTable, StoreBookTable, StoreTable
+from be.model.tables import BookTable, OrderTable, StoreBookTable, StoreTable
 
 
 class Seller(db_conn.DBConn):
@@ -19,9 +18,8 @@ class Seller(db_conn.DBConn):
         book_info,
         stock_level: int,
     ):
-        book_id = book_info.get("id")
-        price = book_info.get("price")
         try:
+            book_id = book_info.get("id")
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id)
             if not self.store_id_exist(store_id):
@@ -29,26 +27,34 @@ class Seller(db_conn.DBConn):
             if self.book_id_exist(store_id, book_id):
                 return error.error_exist_book_id(book_id)
 
-            store = StoreBookTable(
-                store_id=store_id, book_id=book_id, price=price, stock_level=stock_level
-            )
-            self.conn.add(store)
-            self.conn.commit()
-
+            price = book_info.pop("price")
             pictures = book_info.pop("pictures")
+            content = book_info.pop("content")
             self.mongo["book"].insert_one(
                 {
                     "store_id": store_id,
                     "book_id": book_id,
-                    "book_info": json.dumps(book_info),
                     "pictures": pictures,
+                    "content": content,
                 }
             )
+
+            store = StoreBookTable(
+                store_id=store_id, book_id=book_id, price=price, stock_level=stock_level
+            )
+            self.conn.add(store)
+
+            book_info["store_id"] = store_id
+            book_info["tags"] = " ".join(book_info["tags"])
+            self.conn.add(BookTable(**book_info))
+
+            self.conn.commit()
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except OperationFailure as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
+            print(e)
             return 530, "{}".format(str(e))
         return 200, "ok"
 

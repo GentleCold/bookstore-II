@@ -1,27 +1,15 @@
-import json
 from typing import Optional, Tuple
 
 import pymongo.errors
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy_searchable import search
 
 from be.model import db_conn, error
-from be.model.tables import StoreBookTable
+from be.model.tables import BookTable, StoreBookTable, allowed_fields
 
 
 def _check_fields(fields):
-    allowed_fields = [
-        "id",
-        "tags",
-        "title",
-        "author",
-        "publisher",
-        "original_title",
-        "translator",
-        "pub_year",
-        "author_intro",
-        "book_intro",
-        "content",
-    ]
     for field in fields:
         if field not in allowed_fields:
             return False
@@ -37,48 +25,49 @@ class Search(db_conn.DBConn):
     ) -> Tuple[int, str, list]:
         results = []
         try:
-            books = None
-            key = json.dumps(key)
-            if store_id is None:  # global search
-                books = self.mongo["book"].find({"$text": {"$search": key}})
-            else:
+            query = search(select(BookTable), key)
+
+            if store_id:
                 if not self.store_id_exist(store_id):
                     return error.error_non_exist_store_id(store_id) + ([],)
-                books = self.mongo["book"].find(
-                    {"store_id": store_id, "$text": {"$search": key}}
-                )
-            key = json.loads(key)
+                query = query.filter(BookTable.store_id == store_id)
+
+            books = self.conn.scalars(query).all()
 
             for book in books:
-                correspond = False
-                if fields is not None and not _check_fields(fields):
-                    return error.error_invalid_fields() + ([],)
+                book_table_dict = {
+                    column.name: getattr(book, column.name)
+                    for column in book.__table__.columns
+                    if column.name != "search_vector"
+                }
 
-                book_id = book["book_id"]
-                store_id = book["store_id"]
-
-                if fields is not None:
-                    book_info = json.loads(book["book_info"])
+                # check fields
+                if fields:
+                    if not _check_fields(fields):
+                        return error.error_invalid_fields() + ([],)
+                    correspond = False
                     for field in fields:
-                        if key in book_info[field]:
+                        if key in book_table_dict[field]:
                             correspond = True
                             break
+                    if not correspond:
+                        continue
 
-                if correspond or fields is None:
-                    stock_level = (
-                        self.conn.query(StoreBookTable.stock_level)
-                        .filter_by(store_id=store_id, book_id=book_id)
-                        .first()[0]
-                    )
-                    results.append(
-                        {
-                            "store_id": store_id,
-                            "book_id": book_id,
-                            "book_info": book["book_info"],
-                            "pictures": book["pictures"],
-                            "stock_level": stock_level,
-                        }
-                    )
+                blob = self.mongo["book"].find_one(
+                    {"store_id": book.store_id, "book_id": book.id}
+                )
+
+                info = (
+                    self.conn.query(StoreBookTable.price, StoreBookTable.stock_level)
+                    .filter_by(store_id=book.store_id, book_id=book.id)
+                    .first()
+                )
+
+                book_table_dict["pictures"] = blob["pictures"]
+                book_table_dict["content"] = blob["content"]
+                book_table_dict["price"] = info[0]
+                book_table_dict["stock_level"] = info[1]
+                results.append(book_table_dict)
 
             if not results:
                 return error.error_non_exist_search_result() + ([],)
@@ -87,7 +76,7 @@ class Search(db_conn.DBConn):
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e)), []
         except BaseException as e:
-            # print(e)
+            print(e)
             return 530, "{}".format(str(e)), []
 
         return 200, "ok", results

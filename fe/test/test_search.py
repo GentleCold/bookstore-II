@@ -33,7 +33,8 @@ class TestSearch:
     def test_search_store_with_fields(self):
         book_info = self.gen_book.buy_book_info_list[0]
         key = book_info[0].tags[0]
-        fields = ["tags", "book_intro", "content"]
+        print(key)
+        fields = ["tags", "book_intro"]
         code, _ = self.search.search(key, self.store_id, fields)
         print(json.dumps(_))
         assert code == 200

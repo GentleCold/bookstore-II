@@ -7,6 +7,7 @@ import pymongo.errors
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.mapper import configure_mappers
 
 from be.model.tables import Base
 
@@ -17,6 +18,7 @@ class Store:
         self.engine = self.get_db_conn()
         # drop out all tables befor initialize
         Base.metadata.drop_all(self.engine)
+        configure_mappers()
         Base.metadata.create_all(self.engine)
         self.database = sessionmaker(bind=self.engine)
 
@@ -24,8 +26,8 @@ class Store:
         self.pymongo = self.get_mongo_conn()["be"]
         self.pymongo["book"].drop()
 
-        # self.pymongo["book"].create_index("store_id")
-        self.pymongo["book"].create_index([("$**", "text")])
+        self.pymongo["book"].create_index(["store_id", "book_id"], unique=True)
+        # self.pymongo["book"].create_index([("$**", "text")])
 
     @staticmethod
     def get_db_conn():

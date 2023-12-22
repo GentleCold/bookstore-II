@@ -83,7 +83,7 @@ graph LR
 | 变量名         | 类型   | 描述            | 是否可为空 |
 | -------------- | ------ | --------------- | ---------- |
 | store_id       | string | 书籍ID          | N          |
-| book_id        | string | 书籍ID          | N          |
+| id             | string | 书籍ID          | N          |
 | title          | string | 书籍题目        | N          |
 | author         | string | 作者            | Y          |
 | publisher      | string | 出版社          | Y          |
