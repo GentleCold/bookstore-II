@@ -21,7 +21,12 @@ class Search(db_conn.DBConn):
         db_conn.DBConn.__init__(self)
 
     def search(
-        self, key: str, store_id: Optional[str], fields: Optional[list]
+        self,
+        key: str,
+        store_id: Optional[str],
+        fields: Optional[list],
+        page_size,
+        page_num,
     ) -> Tuple[int, str, list]:
         results = []
         try:
@@ -31,6 +36,9 @@ class Search(db_conn.DBConn):
                 if not self.store_id_exist(store_id):
                     return error.error_non_exist_store_id(store_id) + ([],)
                 query = query.filter(BookTable.store_id == store_id)
+
+            if page_size and page_num:
+                query = query.offset(page_num * page_size).limit(page_size)
 
             books = self.conn.scalars(query).all()
 

@@ -83,3 +83,10 @@ class TestSearch:
         fields = ["table"]
         code, _ = self.search.search(key, None, fields)
         assert code != 200
+
+    def test_page_search(self):
+        book_info = self.gen_book.buy_book_info_list[0]
+        key = book_info[0].tags[0]
+        fields = ["tags", "book_intro"]
+        code, _ = self.search.search(key, self.store_id, fields, 10, 0)
+        assert code == 200

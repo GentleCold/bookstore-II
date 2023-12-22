@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, Integer, String, Text, text
+from sqlalchemy import Column, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 from sqlalchemy_searchable import make_searchable
 from sqlalchemy_utils.types import TSVectorType

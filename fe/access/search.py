@@ -10,12 +10,19 @@ class Search:
         self.token = token
 
     def search(
-        self, key: str, store_id: Optional[str], fields: Optional[list]
+        self,
+        key: str,
+        store_id: Optional[str],
+        fields: Optional[list],
+        page_size=None,
+        page_num=None,
     ) -> Tuple[int, list]:
         json = {
             "key": key,
             "store_id": store_id,
             "fields": fields,
+            "page_size": page_size,
+            "page_num": page_num,
         }
         url = urljoin(self.url_prefix, "search")
 
