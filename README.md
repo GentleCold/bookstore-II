@@ -78,40 +78,35 @@ graph LR
 
 ###### book（图书表）
 
-图书表使用文档型数据库MongoDB记录：
+其中store_id和book_id唯一标识一本书，price字段已在关系表中说明可去除，同时为在搜索范围内的字段创建全文索引
 
-```json
-{
-    "tags": [
-        "tags1",
-        "tags2",
-        "tags3",
-        "..."
-    ],
-    "pictures": [
-        "$Base 64 encoded bytes array1$",
-        "$Base 64 encoded bytes array2$",
-        "$Base 64 encoded bytes array3$",
-        "..."
-    ],
-    "id": "$book id$",
-    "title": "$book title$",
-    "author": "$book author$",
-    "publisher": "$book publisher$",
-    "original_title": "$original title$",
-    "translator": "translater",
-    "pub_year": "$pub year$",
-    "pages": 10,
-    "price": 10,
-    "binding": "平装",
-    "isbn": "$isbn$",
-    "author_intro": "$author introduction$",
-    "book_intro": "$book introduction$",
-    "content": "$chapter1 ...$"
-},
-```
+| 变量名         | 类型   | 描述            | 是否可为空 |
+| -------------- | ------ | --------------- | ---------- |
+| store_id       | string | 书籍ID          | N          |
+| book_id        | string | 书籍ID          | N          |
+| title          | string | 书籍题目        | N          |
+| author         | string | 作者            | Y          |
+| publisher      | string | 出版社          | Y          |
+| original_title | string | 原书题目        | Y          |
+| translator     | string | 译者            | Y          |
+| pub_year       | string | 出版年月        | Y          |
+| pages          | int    | 页数            | Y          |
+| binding        | string | 装帧，精状/平装 | Y          |
+| isbn           | string | ISBN号          | Y          |
+| author_intro   | string | 作者简介        | Y          |
+| book_intro     | string | 书籍简介        | Y          |
+| tags           | array  | 标签            | Y          |
 
-为book_id创建索引
+其中不常用且不在搜索范围内的大块blob数据（图片）和内容(content)分离出来存储于mongodb:
+
+###### book_infos（图书表）
+
+| 变量名   | 类型   | 描述     | 是否可为空 |
+| -------- | ------ | -------- | ---------- |
+| store_id | string | 书籍ID   | N          |
+| book_id  | string | 书籍ID   | N          |
+| pictures | array  | 照片     | Y          |
+| content  | string | 样章试读 | Y          |
 
 ##### 关系表
 

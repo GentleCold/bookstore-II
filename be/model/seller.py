@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from flask.app import json
 from pymongo.errors import OperationFailure
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -34,7 +35,15 @@ class Seller(db_conn.DBConn):
             self.conn.add(store)
             self.conn.commit()
 
-            self.mongo["book"].insert_one(book_info)
+            pictures = book_info.pop("pictures")
+            self.mongo["book"].insert_one(
+                {
+                    "store_id": store_id,
+                    "book_id": book_id,
+                    "book_info": json.dumps(book_info),
+                    "pictures": pictures,
+                }
+            )
         except SQLAlchemyError as e:
             return 528, "{}".format(str(e))
         except OperationFailure as e:

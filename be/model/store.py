@@ -23,7 +23,9 @@ class Store:
         # mongodb
         self.pymongo = self.get_mongo_conn()["be"]
         self.pymongo["book"].drop()
-        self.pymongo["book"].create_index(["book_id"])
+
+        # self.pymongo["book"].create_index("store_id")
+        self.pymongo["book"].create_index([("$**", "text")])
 
     @staticmethod
     def get_db_conn():

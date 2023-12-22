@@ -6,7 +6,7 @@ from flask.blueprints import Blueprint
 from flask.globals import request
 
 from be.model.store import init_completed_event, init_database
-from be.view import auth, buyer, seller
+from be.view import auth, buyer, search, seller
 
 bp_shutdown = Blueprint("shutdown", __name__)
 
@@ -43,5 +43,6 @@ def be_run():
     app.register_blueprint(auth.bp_auth)
     app.register_blueprint(seller.bp_seller)
     app.register_blueprint(buyer.bp_buyer)
+    app.register_blueprint(search.bp_search)
     init_completed_event.set()
     app.run()
