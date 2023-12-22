@@ -31,7 +31,7 @@ class TestCancelOrder:
 
         # 构造一批图书，生成图书时已经将书本加入商店
         gen_book = GenBook(self.seller_id, self.store_id)
-        ok, buy_book_id_list = gen_book.gen(
+        ok, self.buy_book_id_list = gen_book.gen(
             non_exist_book_id=False, low_stock_level=False, max_book_count=5
         )
         self.buy_book_info_list = gen_book.buy_book_info_list
@@ -44,7 +44,7 @@ class TestCancelOrder:
         self.buyer = b
 
         # 下单
-        code, self.order_id = b.new_order(self.store_id, buy_book_id_list)
+        code, self.order_id = b.new_order(self.store_id, self.buy_book_id_list)
         assert code == 200
 
         # 计算总价格
@@ -71,6 +71,11 @@ class TestCancelOrder:
         code = self.buyer.payment(self.order_id)
         assert code == 200
         code = self.buyer.cancel_order(self.order_id)
+        assert code == 200
+        # 取消后还能正常支付
+        code, order_id = self.buyer.new_order(self.store_id, self.buy_book_id_list)
+        assert code == 200
+        code = self.buyer.payment(order_id)
         assert code == 200
 
     def test_ok_after_ship(self):

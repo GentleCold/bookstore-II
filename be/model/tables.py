@@ -1,9 +1,7 @@
-from sqlalchemy import Column, Float, Integer, String, Text
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import CheckConstraint, Column, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy_searchable import make_searchable
 from sqlalchemy_utils.types import TSVectorType
-
-# from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 make_searchable(Base.metadata)
@@ -24,17 +22,22 @@ class StoreTable(Base):
     __tablename__ = "store_table"
 
     store_id = Column(String, primary_key=True)
-    user_id = Column(String)
+    user_id = Column(String, ForeignKey("user_table.user_id"))
+
+    user = relationship("UserTable", backref="stores")
 
 
 class OrderTable(Base):
     __tablename__ = "order_table"
 
     order_id = Column(String, primary_key=True)
-    user_id = Column(String)
-    store_id = Column(String)
+    user_id = Column(String, ForeignKey("user_table.user_id"))
+    store_id = Column(String, ForeignKey("store_table.store_id"))
     state = Column(Integer)
     time = Column(Float)
+
+    user = relationship("UserTable", backref="orders")
+    store = relationship("StoreTable", backref="orders")
 
 
 class StoreBookTable(Base):
@@ -43,7 +46,7 @@ class StoreBookTable(Base):
     store_id = Column(String, primary_key=True)
     book_id = Column(String, primary_key=True)
     price = Column(Integer)
-    stock_level = Column(Integer)
+    stock_level = Column(Integer, CheckConstraint("stock_level >= 0"))
 
 
 class OrderDetailTable(Base):

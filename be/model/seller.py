@@ -2,6 +2,7 @@ from typing import Tuple
 
 from pymongo.errors import OperationFailure
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
 
 from be.model import db_conn, error
 from be.model.tables import BookTable, OrderTable, StoreBookTable, StoreTable
@@ -104,8 +105,9 @@ class Seller(db_conn.DBConn):
                 return error.error_non_exist_store_id(store_id)
 
             order = (
-                self.conn.query(OrderTable.store_id, OrderTable.state)
+                self.conn.query(OrderTable)
                 .filter_by(order_id=order_id)
+                .options(joinedload(OrderTable.store).joinedload(StoreTable.user))
                 .first()
             )
 
@@ -113,28 +115,20 @@ class Seller(db_conn.DBConn):
             if order is None:
                 return error.error_invalid_order_id(order_id)
 
-            state = order[1]
-
             # 不匹配商店
-            if store_id != order[0]:
+            if store_id != order.store_id:
                 return error.error_not_corresponding_store(store_id, order_id)
 
-            store = (
-                self.conn.query(StoreTable.user_id).filter_by(store_id=store_id).first()
-            )
-
             # 不匹配卖家
-            if user_id != store[0]:
+            if user_id != order.store.user_id:
                 return error.error_not_corresponding_seller(user_id, order_id)
 
             # 非期待订单状态
-            if state != 1:
+            if order.state != 1:
                 return error.error_unexpected_order_status(order_id, "paid")
 
             # 发货，更新状态
-            self.conn.query(OrderTable).filter_by(order_id=order_id).update(
-                {"state": 2}
-            )
+            order.state = 2
             self.conn.commit()
         except SQLAlchemyError as e:
             return 528, str(e)
