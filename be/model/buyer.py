@@ -7,13 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 
 from be.model import db_conn, error
-from be.model.tables import (
-    OrderDetailTable,
-    OrderTable,
-    StoreBookTable,
-    StoreTable,
-    UserTable,
-)
+from be.model.tables import (OrderDetailTable, OrderTable, StoreBookTable,
+                             StoreTable, UserTable)
 
 
 class Buyer(db_conn.DBConn):

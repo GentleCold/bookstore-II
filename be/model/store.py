@@ -35,8 +35,10 @@ class Store:
         try:
             conn = create_engine(
                 "postgresql://gentle:123qwe@localhost:5432/bookstore",
-                pool_size=100,
-                pool_recycle=5,
+                pool_size=100,  # 连接池大小
+                pool_recycle=5,  # 连接池重用时间
+                pool_timeout=10,  # 连接池超时
+                max_overflow=50,  # 连接池溢出
             )
         except SQLAlchemyError as e:
             print(e)
@@ -46,7 +48,6 @@ class Store:
 
     @staticmethod
     def get_mongo_conn():
-        # 更换数据库为 mongodb
         conn = None
         try:
             conn = pymongo.MongoClient()
